@@ -6,7 +6,8 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
-import { User, Calendar, CheckCircle2, XCircle, RotateCw, Link2, Wallet } from "lucide-react";
+import { User, Calendar, CheckCircle2, RotateCw, Link2, Wallet } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 
 export default async function ContasPage({ searchParams }: { searchParams: Promise<{ q?: string; date?: string }> }) {
   const session = await getServerSession(authOptions);
@@ -14,7 +15,7 @@ export default async function ContasPage({ searchParams }: { searchParams: Promi
   const sp = await searchParams;
   const q = sp.q?.trim();
   const date = sp.date;
-  const where: any = {};
+  const where: Prisma.ContaWhereInput = {};
   if (q) {
     where.OR = [
       { profileName: { contains: q, mode: "insensitive" } },

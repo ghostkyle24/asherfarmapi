@@ -2,6 +2,7 @@ import { prisma } from "../../../../lib/prisma";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../lib/auth";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(
   _request: Request,
@@ -37,7 +38,13 @@ export async function PATCH(
       estado,
       bms: {
         deleteMany: {},
-        create: (Array.isArray(bms) ? bms : []).map((x: any) => ({ name: x.name })),
+        create: (
+          Array.isArray(bms)
+            ? (bms as Array<{ name?: string | null }>)
+            : []
+        )
+          .filter((x): x is { name: string } => typeof x?.name === "string" && x.name.trim().length > 0)
+          .map((x) => ({ name: x.name })),
       },
     },
   });

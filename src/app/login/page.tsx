@@ -18,7 +18,7 @@ export default function LoginPage() {
       redirect: true,
       callbackUrl: "/dashboard",
     });
-    if ((res as any)?.error) setError("Credenciais inválidas");
+    if (res && typeof res === "object" && "error" in res && res.error) setError("Credenciais inválidas");
     setLoading(false);
   };
 

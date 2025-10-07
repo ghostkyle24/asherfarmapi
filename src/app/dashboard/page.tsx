@@ -4,7 +4,8 @@ import { authOptions } from "../../lib/auth";
 import Link from "next/link";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { LayoutDashboard, PlusCircle, ListTree, Target, Banknote, RefreshCw } from "lucide-react";
+import { PlusCircle, ListTree, Target, Banknote, RefreshCw } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ start?: string; end?: string }> }) {
@@ -16,7 +17,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 	const start = startStr && !Number.isNaN(Date.parse(startStr)) ? new Date(startStr) : undefined;
 	const end = endStr && !Number.isNaN(Date.parse(endStr)) ? new Date(endStr) : undefined;
 	const endPlus = end ? new Date(new Date(end).setDate(end.getDate() + 1)) : undefined;
-	const whereDate: any = {};
+const whereDate: Prisma.ContaWhereInput = {} as Prisma.ContaWhereInput;
 	if (start || endPlus) {
 		whereDate.processDate = {
 			...(start ? { gte: start } : {}),
@@ -30,7 +31,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 		prisma.conta.count({ where: { ...whereDate, reposicao: true } }),
 		prisma.conta.aggregate({ where: { ...whereDate }, _sum: { amountPaid: true } }),
 	]);
-	const totalSpentNumber = (sumAmount._sum.amountPaid as any)?.toNumber?.() ?? Number(sumAmount._sum.amountPaid ?? 0);
+const totalSpentNumber = (sumAmount._sum.amountPaid as unknown as { toNumber?: () => number })?.toNumber?.() ?? Number(sumAmount._sum.amountPaid ?? 0);
 	const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalSpentNumber || 0);
 
 	return (

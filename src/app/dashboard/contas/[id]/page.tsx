@@ -4,6 +4,19 @@ import { useRouter } from "next/navigation";
 
 type Categoria = "C250" | "C1K" | "C10K";
 type Estado = "ATIVA" | "CAIDA" | "RESTABELECENDO";
+type Bm = { id: string; name: string };
+type Conta = {
+  id: string;
+  profileName: string | null;
+  amountPaid: string | number | null;
+  bms: Bm[];
+  processDate: string | Date | null;
+  templateApproved: boolean | null;
+  reposicao: boolean | null;
+  categoria: Categoria | null;
+  inviteLink: string | null;
+  estado: Estado | null;
+};
 
 export default function EditContaPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string>("");
@@ -25,10 +38,10 @@ export default function EditContaPage({ params }: { params: Promise<{ id: string
       setId(p.id);
       const res = await fetch(`/api/contas/${p.id}`);
       if (!res.ok) return;
-      const c = await res.json();
+      const c: Conta = await res.json();
       setProfileName(c.profileName ?? "");
-      setAmountPaid(c.amountPaid ?? "");
-      setBmNames((c.bms ?? []).map((b: any) => b.name));
+      setAmountPaid(c.amountPaid != null ? String(c.amountPaid) : "");
+      setBmNames((c.bms ?? []).map((b) => b.name));
       setDate(c.processDate ? new Date(c.processDate).toISOString().slice(0, 10) : "");
       setTemplateApproved(c.templateApproved == null ? "" : c.templateApproved ? "SIM" : "NAO");
       setReposicao(c.reposicao == null ? "" : c.reposicao ? "SIM" : "NAO");
@@ -37,7 +50,7 @@ export default function EditContaPage({ params }: { params: Promise<{ id: string
       setEstado(c.estado ?? "");
       setLoading(false);
     })();
-  }, [id]);
+  }, [params, id]);
 
   const onChangeQtdBms = (v: number) => {
     setBmNames((prev) => {
@@ -49,6 +62,18 @@ export default function EditContaPage({ params }: { params: Promise<{ id: string
       }
       return next;
     });
+  };
+
+  type UpdateBody = {
+    profileName: string | null;
+    amountPaid: number | null;
+    processDate: string | null;
+    templateApproved: boolean | null;
+    reposicao: boolean | null;
+    categoria: Categoria | null | "";
+    inviteLink: string | null;
+    bms: Array<{ name: string }>;
+    estado: Estado | null | "";
   };
 
   const submit = async () => {

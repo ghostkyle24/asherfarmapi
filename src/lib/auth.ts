@@ -2,6 +2,8 @@ import { prisma } from "../lib/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
 import bcrypt from "bcryptjs";
+import type { JWT } from "next-auth/jwt";
+import type { Session } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -22,7 +24,12 @@ export const authOptions: NextAuthOptions = {
         if (!user || !user.passwordHash) return null;
         const ok = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!ok) return null;
-        return { id: user.id, name: user.name ?? user.username, username: user.username, role: user.role } as any;
+        return { id: user.id, name: user.name ?? user.username, username: user.username, role: user.role } as {
+          id: string;
+          name: string | null;
+          username: string;
+          role: string;
+        };
       },
     }),
   ],
@@ -32,15 +39,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.username = (user as any).username;
-        token.role = (user as any).role;
+        (token as JWT & { username?: string; role?: string }).username = (user as { username: string }).username;
+        (token as JWT & { username?: string; role?: string }).role = (user as { role: string }).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).username = token.username;
-        (session.user as any).role = token.role;
+        (session as Session & { user: { username?: string; role?: string } }).user.username = (token as JWT & { username?: string }).username;
+        (session as Session & { user: { username?: string; role?: string } }).user.role = (token as JWT & { role?: string }).role;
       }
       return session;
     },

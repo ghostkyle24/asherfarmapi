@@ -3,6 +3,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Categoria = "C250" | "C1K" | "C10K";
+type CreateBody = {
+  profileName: string | null;
+  amountPaid: number | null;
+  processDate: string | null;
+  templateApproved: boolean | null;
+  reposicao: boolean | null;
+  categoria: Categoria | null | "";
+  inviteLink: string | null;
+  bms: Array<{ name: string }>;
+};
 
 export default function NovaContaPage() {
   const [profileName, setProfileName] = useState("");
@@ -32,7 +42,7 @@ export default function NovaContaPage() {
 
   const submit = async () => {
     setLoading(true);
-    const body: any = {
+    const body: CreateBody = {
       profileName: profileName || null,
       amountPaid: amountPaid ? parseFloat(amountPaid) : null,
       processDate: date ? new Date(date).toISOString() : null,
