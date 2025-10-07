@@ -5,6 +5,19 @@ import bcrypt from "bcryptjs";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 
+type AuthUser = {
+  id: string;
+  name: string | null;
+  username: string;
+  role: string;
+};
+
+function isAuthUser(value: unknown): value is AuthUser {
+  if (!value || typeof value !== "object") return false;
+  const obj = value as Record<string, unknown>;
+  return typeof obj.username === "string" && typeof obj.role === "string";
+}
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
@@ -38,18 +51,21 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        (token as JWT & { username?: string; role?: string }).username = (user as { username: string }).username;
-        (token as JWT & { username?: string; role?: string }).role = (user as { role: string }).role;
+      const t = token as JWT & { username?: string; role?: string };
+      if (user && isAuthUser(user)) {
+        t.username = user.username;
+        t.role = user.role;
       }
-      return token;
+      return t;
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session as Session & { user: { username?: string; role?: string } }).user.username = (token as JWT & { username?: string }).username;
-        (session as Session & { user: { username?: string; role?: string } }).user.role = (token as JWT & { role?: string }).role;
+      const s = session as Session & { user: { username?: string; role?: string } };
+      const t = token as JWT & { username?: string; role?: string };
+      if (s.user) {
+        s.user.username = t.username;
+        s.user.role = t.role;
       }
-      return session;
+      return s;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
